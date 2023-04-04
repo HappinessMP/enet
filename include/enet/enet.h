@@ -175,7 +175,7 @@ typedef struct _ENetOutgoingCommand
    enet_uint16  unreliableSequenceNumber;
    enet_uint32  sentTime;
    enet_uint32  roundTripTimeout;
-   enet_uint32  roundTripTimeoutLimit;
+   enet_uint32  queueTime;
    enet_uint32  fragmentOffset;
    enet_uint16  fragmentLength;
    enet_uint16  sendAttempts;
@@ -218,7 +218,7 @@ enum
    ENET_HOST_RECEIVE_BUFFER_SIZE          = 256 * 1024,
    ENET_HOST_SEND_BUFFER_SIZE             = 256 * 1024,
    ENET_HOST_BANDWIDTH_THROTTLE_INTERVAL  = 1000,
-   ENET_HOST_DEFAULT_MTU                  = 1400,
+   ENET_HOST_DEFAULT_MTU                  = 1392,
    ENET_HOST_DEFAULT_MAXIMUM_PACKET_SIZE  = 32 * 1024 * 1024,
    ENET_HOST_DEFAULT_MAXIMUM_WAITING_DATA = 32 * 1024 * 1024,
 
@@ -258,7 +258,8 @@ typedef struct _ENetChannel
 
 typedef enum _ENetPeerFlag
 {
-   ENET_PEER_FLAG_NEEDS_DISPATCH = (1 << 0)
+   ENET_PEER_FLAG_NEEDS_DISPATCH   = (1 << 0),
+   ENET_PEER_FLAG_CONTINUE_SENDING = (1 << 1)
 } ENetPeerFlag;
 
 /**
@@ -318,7 +319,7 @@ typedef struct _ENetPeer
    enet_uint16   outgoingReliableSequenceNumber;
    ENetList      acknowledgements;
    ENetList      sentReliableCommands;
-   ENetList      sentUnreliableCommands;
+   ENetList      outgoingSendReliableCommands;
    ENetList      outgoingCommands;
    ENetList      dispatchedCommands;
    enet_uint16   flags;
@@ -381,7 +382,7 @@ typedef struct _ENetHost
    size_t               channelLimit;                /**< maximum number of channels allowed for connected peers */
    enet_uint32          serviceTime;
    ENetList             dispatchQueue;
-   int                  continueSending;
+   enet_uint32          totalQueued;
    size_t               packetSize;
    enet_uint16          headerFlags;
    ENetProtocol         commands [ENET_PROTOCOL_MAXIMUM_PACKET_COMMANDS];
@@ -595,6 +596,7 @@ ENET_API void                enet_peer_disconnect_later (ENetPeer *, enet_uint32
 ENET_API void                enet_peer_throttle_configure (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
 extern int                   enet_peer_throttle (ENetPeer *, enet_uint32);
 extern void                  enet_peer_reset_queues (ENetPeer *);
+extern int                   enet_peer_has_outgoing_commands (ENetPeer *);
 extern void                  enet_peer_setup_outgoing_command (ENetPeer *, ENetOutgoingCommand *);
 extern ENetOutgoingCommand * enet_peer_queue_outgoing_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
 extern ENetIncomingCommand * enet_peer_queue_incoming_command (ENetPeer *, const ENetProtocol *, const void *, size_t, enet_uint32, enet_uint32);
