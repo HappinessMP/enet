@@ -1072,7 +1072,7 @@ enet_protocol_handle_incoming_commands (ENetHost * host, ENetEvent * event)
 
     if (host -> checksum != NULL)
     {
-        enet_uint32 * checksum = (enet_uint32 *) & host -> receivedData [headerSize - sizeof (enet_uint32)],
+        enet_uint32 * checksum = (enet_uint32 *) & host -> receivedData [headerSize - sizeof (enet_uint32)];
         enet_uint32 desiredChecksum, newChecksum;
         ENetBuffer buffer;
         /* Checksum may be an unaligned pointer, use memcpy to avoid undefined behaviour. */
